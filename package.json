@@ -12,7 +12,9 @@
   "dependencies": {
     "bootstrap": "^3.3.7",
     "react": "^15.3.2",
-    "react-dom": "^15.3.2"
+    "react-dom": "^15.3.2",
+    "express": "latest",
+    "react-router": "latest"
   },
   "devDependencies": {
     "babel-core": "^6.16.0",
