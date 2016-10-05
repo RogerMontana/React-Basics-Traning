@@ -2,14 +2,8 @@ require("bootstrap/dist/css/bootstrap.css");
 import React from 'react';
 import {render} from 'react-dom';
 import {hashHistory} from 'react-router';
-
-const dataSource = [
-    {firstName: "John", lastName: "Doe", active: false, id: 1},
-    {firstName: "Mary", lastName: "Moe", active: false, id: 2 },
-    {firstName: "Peter", lastName: "Noname", active: true, id: 3}
-];
-
-
+import {connect} from 'react-redux';
+import {filterGrid, toggleActive, loadDataInGrid} from "../Actions";
 
 export class GridRecord extends React.Component {
     showUserDetails(e){
@@ -50,7 +44,7 @@ GridRecord.propTypes = {
 };
 
 
-export default class GridComponent extends React.Component {
+export class GridComponent extends React.Component {
 
     constructor() {
         super();
@@ -59,32 +53,24 @@ export default class GridComponent extends React.Component {
         }
     }
 
-    componentDidMount() {
-
+    componentDidMount(){
         this.refs.filterInput && this.refs.filterInput.focus();
-
-        this.setState({
-
-            records: dataSource
-
-        })
-
+        this.loadData();
     }
 
-    toggleActive(index) {
-        let {records} = this.state;
-        records[index].active = !records[index].active;
-        this.setState({
-            records: records
-        })
+    loadData(){
+        let {dispatch} = this.props;
+        dispatch(loadDataInGrid());
+    }
+
+    toggleActive(index){
+        let {dispatch} = this.props;
+        dispatch(toggleActive(index));
     }
 
     handleFilterChange(e) {
-        let value = e.target.value,
-            records = dataSource.filter((record) => record.firstName.toUpperCase().includes(value.toUpperCase()));
-        this.setState({
-            records: records
-        });
+        let {dispatch} = this.props;
+        dispatch(filterGrid(e.target.value));
     }
 
     editField(index) {
@@ -94,7 +80,11 @@ export default class GridComponent extends React.Component {
         })
     }
 
+
     render() {
+        let recordsToShow = this.props.records.filter((record)=>{
+            return this.props.filtered.indexOf(record.id)==-1;
+        });
         return (
             <div style={{width: 300, height: 300, padding: 20}}>
                 <p>
@@ -112,11 +102,9 @@ export default class GridComponent extends React.Component {
                     </tr>
                     </thead>
                     <tbody>
-                    {this.state.records.map((record, index)=> {
-                        return <GridRecord record={record}
-                                           key={index}
-                                           toggleActive={this.toggleActive.bind(this, index)}
-                                           editField={this.editField.bind(this, index)}/>
+                    {recordsToShow.map((record, index)=>{
+
+                        return <GridRecord record={record} key={index} toggleActive={this.toggleActive.bind(this, index)}/>
 
                     })}
                     </tbody>
@@ -133,3 +121,21 @@ export default class GridComponent extends React.Component {
         });
     }
 }
+
+GridComponent.propTypes = {
+    records: React.PropTypes.array.isRequired,
+    filtered: React.PropTypes.array.isRequired,
+    loading: React.PropTypes.bool.isRequired
+};
+
+function mapStateToProps(state) {
+    return {
+        records: state.grid.records,
+        filtered: state.grid.filtered,
+        loading: state.grid.loading
+    }
+}
+
+export default connect(
+    mapStateToProps
+)(GridComponent)
